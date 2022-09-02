@@ -19,6 +19,8 @@ package clickhouse
 
 import (
 	"context"
+	"log"
+	"runtime/debug"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2/lib/proto"
@@ -63,6 +65,12 @@ func (c *connect) query(ctx context.Context, release func(*connect, error), quer
 	)
 
 	go func() {
+		defer func() {
+			if errRecover := recover(); errRecover != nil {
+				log.Println("recovered ===>", errRecover, "\n", string(debug.Stack()))
+				return
+			}
+		}()
 		onProcess.data = func(b *proto.Block) {
 			stream <- b
 		}
